@@ -169,6 +169,11 @@
                 <option value="ellipse">Ellipse</option>
                 <option value="star">Star</option>
                 <option value="diamond">Diamond</option>
+                <option value="pentagon">Pentagon</option>
+                <option value="hexagon">Hexagon</option>
+                <option value="cross">Cross</option>
+                <option value="heart">Heart</option>
+                <option value="plus">Plus Sign</option>
             </select>
             <label for="shapeColor">Color:</label>
             <input type="color" id="shapeColor" value="#000000">
@@ -238,7 +243,6 @@
                 }
             }
         } else {
-            // For line counts 6–21, use only 2 colors
             for (let i = 0; i < lineCount; i++) {
                 ctx.fillStyle = repeatingColors[i % 2];
                 if (orientation === 'horizontal') {
@@ -252,13 +256,12 @@
         }
     }
 
-    // Draw shapes on the canvas
+    // Function to draw shapes on the canvas
     function drawShapes() {
         shapes.forEach(shape => {
             ctx.save();
             ctx.translate(shape.x, shape.y);
             ctx.rotate(shape.rotation * Math.PI / 180);
-
             ctx.fillStyle = shape.color;
             if (shape.type === 'circle') {
                 ctx.beginPath();
@@ -287,12 +290,55 @@
                 ctx.lineTo(shape.width / 2, 0);
                 ctx.closePath();
                 ctx.fill();
+            } else if (shape.type === 'pentagon') {
+                drawPolygon(5, shape.size);
+            } else if (shape.type === 'hexagon') {
+                drawPolygon(6, shape.size);
+            } else if (shape.type === 'cross') {
+                drawCross(shape.size);
+            } else if (shape.type === 'heart') {
+                drawHeart(shape.size);
+            } else if (shape.type === 'plus') {
+                drawPlus(shape.size);
             }
             ctx.restore();
         });
     }
 
-    // Draw star (for star shape)
+    // Function to draw a polygon (pentagon, hexagon)
+    function drawPolygon(sides, size) {
+        const angle = (Math.PI * 2) / sides;
+        ctx.beginPath();
+        for (let i = 0; i < sides; i++) {
+            ctx.lineTo(Math.cos(i * angle) * size, Math.sin(i * angle) * size);
+        }
+        ctx.closePath();
+        ctx.fill();
+    }
+
+    // Function to draw a cross
+    function drawCross(size) {
+        ctx.fillRect(-size / 2, -size / 2, size, size);
+        ctx.fillRect(-size / 2, -size / 2, size / 5, size);
+    }
+
+    // Function to draw a heart
+    function drawHeart(size) {
+        ctx.beginPath();
+        ctx.moveTo(0, size);
+        ctx.bezierCurveTo(-size, 0, -size, -size, 0, -size);
+        ctx.bezierCurveTo(size, -size, size, 0, 0, size);
+        ctx.closePath();
+        ctx.fill();
+    }
+
+    // Function to draw a plus sign
+    function drawPlus(size) {
+        ctx.fillRect(-size / 2, -size / 2, size, size / 5);
+        ctx.fillRect(-size / 2, -size / 2, size / 5, size);
+    }
+
+    // Function to draw star
     function drawStar(x, y, radius1, radius2, npoints) {
         let rot = (Math.PI / 2) * 3;
         let step = Math.PI / npoints;
@@ -427,4 +473,14 @@
 </script>
 
 </body>
+    <!-- Footer Section -->
+<footer style="background-color: #444; color: white; padding: 10px 0; width: 100%; text-align: center; font-size: 0.9em; margin-top: 20px;">
+    <p>BETA VERSION 0.01</p>
+    <p>
+        <strong>Version History:</strong><br>
+        <em>BETA VERSION 0.01:</em> This version is general testing to get the website up and running.<br>
+        <em>Future Updates:</em> More shapes, advanced features, and bug fixes.
+    </p>
+</footer>
+
 </html>
