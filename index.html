@@ -13,9 +13,10 @@
             background-color: #f0f0f0;
         }
         header {
-            background-color: #333;
+            background-color: #444;
             color: white;
-            padding: 1em 0;
+            padding: 1em;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
         }
         #controls {
             margin: 20px;
@@ -25,10 +26,18 @@
         }
         .control {
             margin: 10px;
+            padding: 10px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
         canvas {
-            border: 2px solid #000;
+            border: 3px solid #444;
             margin-top: 20px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        #fileUpload {
+            display: none;
         }
     </style>
 </head>
@@ -59,18 +68,35 @@
         </div>
 
         <div class="control">
+            <label for="template">Flag Template:</label>
+            <select id="template" onchange="applyTemplate()">
+                <option value="none">None</option>
+                <option value="tricolor">Tri-Color</option>
+                <option value="bicolor">Bi-Color</option>
+                <option value="quadcolor">Quad-Color</option>
+            </select>
+        </div>
+
+        <div class="control">
             <button onclick="clearCanvas()">Clear Flag</button>
             <button onclick="downloadFlag()">Download Flag</button>
         </div>
+
+        <div class="control">
+            <button onclick="document.getElementById('fileUpload').click()">Upload PNG</button>
+            <input type="file" id="fileUpload" accept="image/png" onchange="uploadImage(event)">
+        </div>
     </div>
 
-    <canvas id="flagCanvas" width="800" height="500"></canvas>
+    <canvas id="flagCanvas" width="800" height="400"></canvas>
 
     <script>
         const canvas = document.getElementById('flagCanvas');
         const ctx = canvas.getContext('2d');
-        
-        // Set default background
+        const shapes = [];
+        let selectedShape = null;
+
+        // Default background
         ctx.fillStyle = '#ffffff';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
@@ -79,33 +105,88 @@
             ctx.fillRect(0, 0, canvas.width, canvas.height);
         });
 
+        function applyTemplate() {
+            const template = document.getElementById('template').value;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            if (template === 'tricolor') {
+                ctx.fillStyle = '#ff0000'; // Red
+                ctx.fillRect(0, 0, canvas.width, canvas.height / 3);
+                ctx.fillStyle = '#ffffff'; // White
+                ctx.fillRect(0, canvas.height / 3, canvas.width, canvas.height / 3);
+                ctx.fillStyle = '#0000ff'; // Blue
+                ctx.fillRect(0, (2 * canvas.height) / 3, canvas.width, canvas.height / 3);
+            } else if (template === 'bicolor') {
+                ctx.fillStyle = '#000000'; // Black
+                ctx.fillRect(0, 0, canvas.width, canvas.height / 2);
+                ctx.fillStyle = '#ffcc00'; // Yellow
+                ctx.fillRect(0, canvas.height / 2, canvas.width, canvas.height / 2);
+            } else if (template === 'quadcolor') {
+                const colors = ['#ff0000', '#00ff00', '#0000ff', '#ffff00'];
+                for (let i = 0; i < 4; i++) {
+                    ctx.fillStyle = colors[i];
+                    ctx.fillRect((i * canvas.width) / 4, 0, canvas.width / 4, canvas.height);
+                }
+            }
+        }
+
         function addShape() {
             const shape = document.getElementById('shape').value;
             const color = document.getElementById('shapeColor').value;
 
-            ctx.fillStyle = color;
+            const shapeObj = {
+                type: shape,
+                color: color,
+                x: canvas.width / 2,
+                y: canvas.height / 2,
+                size: 50,
+                rotation: 0,
+            };
 
-            switch (shape) {
-                case 'circle':
+            shapes.push(shapeObj);
+            drawCanvas();
+        }
+
+        function drawCanvas() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            shapes.forEach((shape) => {
+                ctx.fillStyle = shape.color;
+                ctx.save();
+                ctx.translate(shape.x, shape.y);
+                ctx.rotate((shape.rotation * Math.PI) / 180);
+
+                if (shape.type === 'circle') {
                     ctx.beginPath();
-                    ctx.arc(400, 250, 100, 0, Math.PI * 2);
+                    ctx.arc(0, 0, shape.size, 0, Math.PI * 2);
                     ctx.fill();
-                    break;
-                case 'rectangle':
-                    ctx.fillRect(300, 200, 200, 100);
-                    break;
-                case 'triangle':
+                } else if (shape.type === 'rectangle') {
+                    ctx.fillRect(-shape.size / 2, -shape.size / 2, shape.size, shape.size);
+                } else if (shape.type === 'triangle') {
                     ctx.beginPath();
-                    ctx.moveTo(400, 150);
-                    ctx.lineTo(300, 350);
-                    ctx.lineTo(500, 350);
+                    ctx.moveTo(0, -shape.size);
+                    ctx.lineTo(-shape.size, shape.size);
+                    ctx.lineTo(shape.size, shape.size);
                     ctx.closePath();
                     ctx.fill();
-                    break;
+                }
+
+                ctx.restore();
+            });
+        }
+
+        function uploadImage(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const img = new Image();
+                img.onload = () => {
+                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                };
+                img.src = URL.createObjectURL(file);
             }
         }
 
         function clearCanvas() {
+            shapes.length = 0;
             ctx.fillStyle = '#ffffff';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
         }
