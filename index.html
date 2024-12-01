@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Digital Flag Maker</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 0;
+            padding: 0;
+            background-color: #f0f0f0;
+        }
+        header {
+            background-color: #333;
+            color: white;
+            padding: 1em 0;
+        }
+        #controls {
+            margin: 20px;
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        .control {
+            margin: 10px;
+        }
+        canvas {
+            border: 2px solid #000;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Digital Flag Maker</h1>
+    </header>
+
+    <div id="controls">
+        <div class="control">
+            <label for="bgColor">Background Color:</label>
+            <input type="color" id="bgColor">
+        </div>
+
+        <div class="control">
+            <label for="shape">Add Shape:</label>
+            <select id="shape">
+                <option value="circle">Circle</option>
+                <option value="rectangle">Rectangle</option>
+                <option value="triangle">Triangle</option>
+            </select>
+            <button onclick="addShape()">Add</button>
+        </div>
+
+        <div class="control">
+            <label for="shapeColor">Shape Color:</label>
+            <input type="color" id="shapeColor">
+        </div>
+
+        <div class="control">
+            <button onclick="clearCanvas()">Clear Flag</button>
+            <button onclick="downloadFlag()">Download Flag</button>
+        </div>
+    </div>
+
+    <canvas id="flagCanvas" width="800" height="500"></canvas>
+
+    <script>
+        const canvas = document.getElementById('flagCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Set default background
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        document.getElementById('bgColor').addEventListener('input', (e) => {
+            ctx.fillStyle = e.target.value;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+        });
+
+        function addShape() {
+            const shape = document.getElementById('shape').value;
+            const color = document.getElementById('shapeColor').value;
+
+            ctx.fillStyle = color;
+
+            switch (shape) {
+                case 'circle':
+                    ctx.beginPath();
+                    ctx.arc(400, 250, 100, 0, Math.PI * 2);
+                    ctx.fill();
+                    break;
+                case 'rectangle':
+                    ctx.fillRect(300, 200, 200, 100);
+                    break;
+                case 'triangle':
+                    ctx.beginPath();
+                    ctx.moveTo(400, 150);
+                    ctx.lineTo(300, 350);
+                    ctx.lineTo(500, 350);
+                    ctx.closePath();
+                    ctx.fill();
+                    break;
+            }
+        }
+
+        function clearCanvas() {
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+        }
+
+        function downloadFlag() {
+            const link = document.createElement('a');
+            link.download = 'flag.png';
+            link.href = canvas.toDataURL();
+            link.click();
+        }
+    </script>
+</body>
+</html>
