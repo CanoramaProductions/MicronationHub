@@ -181,9 +181,9 @@
                 color,
                 x: 400,
                 y: 200,
-                size: 50,
-                width: 50,
-                height: 50,
+                size: 50, // General size (for circle and star)
+                width: 50, // Width (for rectangle, ellipse, and diamond)
+                height: 50, // Height (for rectangle, ellipse, and diamond)
                 rotation: 0,
             };
 
@@ -226,10 +226,10 @@
                         break;
                     case 'diamond':
                         ctx.beginPath();
-                        ctx.moveTo(0, -shape.size);
-                        ctx.lineTo(-shape.size, 0);
-                        ctx.lineTo(0, shape.size);
-                        ctx.lineTo(shape.size, 0);
+                        ctx.moveTo(0, -shape.height / 2);
+                        ctx.lineTo(-shape.width / 2, 0);
+                        ctx.lineTo(0, shape.height / 2);
+                        ctx.lineTo(shape.width / 2, 0);
                         ctx.closePath();
                         ctx.fill();
                         break;
@@ -247,6 +247,7 @@
 
             ctx.beginPath();
             ctx.moveTo(cx, cy - outerRadius);
+
             for (let i = 0; i < spikes; i++) {
                 x = cx + Math.cos(rot) * outerRadius;
                 y = cy + Math.sin(rot) * outerRadius;
