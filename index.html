@@ -96,10 +96,9 @@
 
         <!-- Line Colors -->
         <div class="control">
-            <label>Line Colors (2 colors only):</label>
+            <label>Line Colors (for 1-5 lines):</label>
             <div id="colorPickers">
-                <input type="color" class="colorPicker" value="#ff0000">
-                <input type="color" class="colorPicker" value="#ffffff">
+                <!-- Dynamic color pickers for 1–5 lines -->
             </div>
         </div>
 
@@ -136,27 +135,38 @@
     <script>
         const canvas = document.getElementById('flagCanvas');
         const ctx = canvas.getContext('2d');
-        const colorPickers = document.querySelectorAll('.colorPicker');
+        const colorPickers = document.getElementById('colorPickers');
         let shapes = [];
         let lineCount = 3;
         let orientation = 'horizontal';
 
         // Function to draw the lines
         function drawLines() {
-            const colors = Array.from(colorPickers).map(picker => picker.value);
+            const colors = Array.from(colorPickers.querySelectorAll('input[type=color]')).map(picker => picker.value);
             const repeatingColors = [colors[0], colors[1]]; // Always two colors for lines
 
-            if (orientation === 'horizontal') {
-                const lineHeight = canvas.height / lineCount;
+            if (lineCount <= 5) {
                 for (let i = 0; i < lineCount; i++) {
-                    ctx.fillStyle = repeatingColors[i % 2];
-                    ctx.fillRect(0, i * lineHeight, canvas.width, lineHeight);
+                    ctx.fillStyle = colors[i] || repeatingColors[i % 2];
+                    if (orientation === 'horizontal') {
+                        const lineHeight = canvas.height / lineCount;
+                        ctx.fillRect(0, i * lineHeight, canvas.width, lineHeight);
+                    } else {
+                        const lineWidth = canvas.width / lineCount;
+                        ctx.fillRect(i * lineWidth, 0, lineWidth, canvas.height);
+                    }
                 }
             } else {
-                const lineWidth = canvas.width / lineCount;
+                // For line counts 6–21, use only 2 colors
                 for (let i = 0; i < lineCount; i++) {
                     ctx.fillStyle = repeatingColors[i % 2];
-                    ctx.fillRect(i * lineWidth, 0, lineWidth, canvas.height);
+                    if (orientation === 'horizontal') {
+                        const lineHeight = canvas.height / lineCount;
+                        ctx.fillRect(0, i * lineHeight, canvas.width, lineHeight);
+                    } else {
+                        const lineWidth = canvas.width / lineCount;
+                        ctx.fillRect(i * lineWidth, 0, lineWidth, canvas.height);
+                    }
                 }
             }
         }
@@ -257,10 +267,25 @@
         function updateLines() {
             lineCount = document.getElementById('lineCount').value;
             document.getElementById('lineCountDisplay').textContent = lineCount;
+            updateLineColorPickers();
             drawCanvas();
         }
 
-        // Function to update the shape controls UI
+        // Function to update the color pickers based on line count
+        function updateLineColorPickers() {
+            colorPickers.innerHTML = '';
+            const lineColors = Math.min(lineCount, 5);
+            for (let i = 0; i < lineColors; i++) {
+                const colorPicker = document.createElement('input');
+                colorPicker.type = 'color';
+                colorPicker.classList.add('colorPicker');
+                colorPicker.value = '#ffffff';
+                colorPicker.onchange = drawCanvas;
+                colorPickers.appendChild(colorPicker);
+            }
+        }
+
+        // Function to update shape controls UI
         function updateShapeControls() {
             const shapeControlsContainer = document.getElementById('shapeControls');
             shapeControlsContainer.innerHTML = '';
@@ -328,6 +353,7 @@
             shapes = [];
             document.getElementById('lineCount').value = 3;
             document.getElementById('lineCountDisplay').textContent = '3';
+            updateLineColorPickers();
             drawCanvas();
         }
 
@@ -339,7 +365,8 @@
             link.click();
         }
 
-        // Initial canvas drawing
+        // Initialize flag creation
+        updateLineColorPickers();
         drawCanvas();
     </script>
 
