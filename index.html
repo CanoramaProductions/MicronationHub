@@ -7,43 +7,96 @@
     <style>
         body {
             font-family: Arial, sans-serif;
-            text-align: center;
             margin: 0;
             padding: 0;
-            background-color: #f0f0f0;
             display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: #f0f0f0;
         }
         header {
             background-color: #444;
             color: white;
             padding: 1em;
+            width: 100%;
+            text-align: center;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+            position: sticky;
+            top: 0;
+        }
+        #page-selection {
+            display: flex;
+            justify-content: center;
+            background-color: #444;
+            color: white;
+            padding: 10px;
+            width: 100%;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        #page-selection button {
+            background-color: #444;
+            color: white;
+            border: none;
+            margin: 0 10px;
+            padding: 10px 20px;
+            cursor: pointer;
+            font-size: 1.2em;
+        }
+        #page-selection button:hover {
+            background-color: #666;
+        }
+        #content {
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            margin-top: 20px;
+            padding: 20px;
+            max-width: 1200px;
             width: 100%;
         }
         #controls {
-            margin: 20px;
             display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            width: 30%;
-            padding-right: 20px;
+            flex-direction: column;
+            padding: 20px;
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            max-width: 300px;
+            width: 100%;
+            margin-right: 20px;
         }
         .control {
-            margin: 10px;
-            padding: 10px;
-            background-color: white;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            margin-bottom: 15px;
+        }
+        .control label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        .control input,
+        .control select {
             width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            border: 1px solid #ddd;
         }
-        #colorPickers {
-            display: flex;
-            justify-content: center;
-            flex-wrap: wrap;
-            margin-top: 10px;
+        .control button {
+            padding: 10px;
+            background-color: #444;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
         }
-        .colorPicker {
-            margin: 5px;
+        .control button:hover {
+            background-color: #666;
+        }
+        canvas {
+            border: 3px solid #444;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            flex-grow: 1;
+            max-width: 800px;
+            max-height: 500px;
         }
         #shapeControls {
             max-height: 300px;
@@ -53,10 +106,10 @@
         .shapeItem {
             display: flex;
             flex-direction: column;
-            margin-bottom: 10px;
-            background-color: #f0f0f0;
+            background-color: #f9f9f9;
             padding: 10px;
             border-radius: 8px;
+            margin-bottom: 10px;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
         .shapeItem .shapeHandle {
@@ -66,27 +119,33 @@
             text-align: center;
             border-radius: 5px;
         }
-        canvas {
-            border: 3px solid #444;
-            margin-top: 20px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-            flex-grow: 1;
-        }
     </style>
 </head>
 <body>
 
-    <header>
-        <h1>Digital Flag Maker</h1>
-    </header>
+<header>
+    <h1>Digital Flag Maker</h1>
+</header>
 
+<div id="page-selection">
+    <button onclick="navigatePage('flagMaker')">Flag Maker</button>
+    <button onclick="navigatePage('gallery')">Gallery</button>
+    <button onclick="navigatePage('settings')">Settings</button>
+    <button onclick="navigatePage('help')">Help</button>
+    <button onclick="navigatePage('about')">About</button>
+</div>
+
+<div id="content">
     <div id="controls">
         <!-- Line Settings -->
         <div class="control">
             <label for="lineCount">Number of Lines:</label>
             <input type="range" id="lineCount" min="1" max="21" value="3" onchange="updateLines()">
             <span id="lineCountDisplay">3</span>
-            <br>
+        </div>
+
+        <!-- Line Orientation -->
+        <div class="control">
             <label for="orientation">Orientation:</label>
             <select id="orientation" onchange="drawCanvas()">
                 <option value="horizontal">Horizontal</option>
@@ -97,9 +156,7 @@
         <!-- Line Colors -->
         <div class="control">
             <label>Line Colors (for 1-5 lines):</label>
-            <div id="colorPickers">
-                <!-- Dynamic color pickers for 1–5 lines -->
-            </div>
+            <div id="colorPickers"></div>
         </div>
 
         <!-- Shape Settings -->
@@ -118,7 +175,8 @@
             <button onclick="addShape()">Add Shape</button>
         </div>
 
-        <div id="shapeControls" class="control">
+        <!-- Shape Controls -->
+        <div id="shapeControls">
             <h3>Shape Controls</h3>
             <!-- Shape Items will be dynamically added here -->
         </div>
@@ -131,245 +189,165 @@
     </div>
 
     <canvas id="flagCanvas" width="800" height="400"></canvas>
+</div>
 
-    <script>
-        const canvas = document.getElementById('flagCanvas');
-        const ctx = canvas.getContext('2d');
-        const colorPickers = document.getElementById('colorPickers');
-        let shapes = [];
-        let lineCount = 3;
-        let orientation = 'horizontal';
+<script>
+    let currentPage = 'flagMaker';
+    const canvas = document.getElementById('flagCanvas');
+    const ctx = canvas.getContext('2d');
+    const colorPickers = document.getElementById('colorPickers');
+    let shapes = [];
+    let lineCount = 3;
+    let orientation = 'horizontal';
 
-        // Function to draw the lines
-        function drawLines() {
-            const colors = Array.from(colorPickers.querySelectorAll('input[type=color]')).map(picker => picker.value);
-            const repeatingColors = [colors[0], colors[1]]; // Always two colors for lines
+    // Navigate between pages
+    function navigatePage(page) {
+        currentPage = page;
+        if (page === 'flagMaker') {
+            document.getElementById('controls').style.display = 'flex';
+            canvas.style.display = 'block';
+        } else {
+            document.getElementById('controls').style.display = 'none';
+            canvas.style.display = 'none';
+        }
+    }
 
-            if (lineCount <= 5) {
-                for (let i = 0; i < lineCount; i++) {
-                    ctx.fillStyle = colors[i] || repeatingColors[i % 2];
-                    if (orientation === 'horizontal') {
-                        const lineHeight = canvas.height / lineCount;
-                        ctx.fillRect(0, i * lineHeight, canvas.width, lineHeight);
-                    } else {
-                        const lineWidth = canvas.width / lineCount;
-                        ctx.fillRect(i * lineWidth, 0, lineWidth, canvas.height);
-                    }
+    // Function to draw the lines
+    function drawLines() {
+        const colors = Array.from(colorPickers.querySelectorAll('input[type=color]')).map(picker => picker.value);
+        const repeatingColors = [colors[0], colors[1]]; // Always two colors for lines
+
+        if (lineCount <= 5) {
+            for (let i = 0; i < lineCount; i++) {
+                ctx.fillStyle = colors[i] || repeatingColors[i % 2];
+                if (orientation === 'horizontal') {
+                    const lineHeight = canvas.height / lineCount;
+                    ctx.fillRect(0, i * lineHeight, canvas.width, lineHeight);
+                } else {
+                    const lineWidth = canvas.width / lineCount;
+                    ctx.fillRect(i * lineWidth, 0, lineWidth, canvas.height);
                 }
-            } else {
-                // For line counts 6–21, use only 2 colors
-                for (let i = 0; i < lineCount; i++) {
-                    ctx.fillStyle = repeatingColors[i % 2];
-                    if (orientation === 'horizontal') {
-                        const lineHeight = canvas.height / lineCount;
-                        ctx.fillRect(0, i * lineHeight, canvas.width, lineHeight);
-                    } else {
-                        const lineWidth = canvas.width / lineCount;
-                        ctx.fillRect(i * lineWidth, 0, lineWidth, canvas.height);
-                    }
+            }
+        } else {
+            // For line counts 6–21, use only 2 colors
+            for (let i = 0; i < lineCount; i++) {
+                ctx.fillStyle = repeatingColors[i % 2];
+                if (orientation === 'horizontal') {
+                    const lineHeight = canvas.height / lineCount;
+                    ctx.fillRect(0, i * lineHeight, canvas.width, lineHeight);
+                } else {
+                    const lineWidth = canvas.width / lineCount;
+                    ctx.fillRect(i * lineWidth, 0, lineWidth, canvas.height);
                 }
             }
         }
+    }
 
-        // Function to add shape to the canvas
-        function addShape() {
-            const shapeType = document.getElementById('shape').value;
-            const color = document.getElementById('shapeColor').value;
+    // Function to add shape to the canvas
+    function addShape() {
+        const shapeType = document.getElementById('shape').value;
+        const color = document.getElementById('shapeColor').value;
 
-            const shape = {
-                type: shapeType,
-                color,
-                x: 400,
-                y: 200,
-                size: 50, // General size (for circle and star)
-                width: 50, // Width (for rectangle, ellipse, and diamond)
-                height: 50, // Height (for rectangle, ellipse, and diamond)
-                rotation: 0,
-            };
+        const shape = {
+            type: shapeType,
+            color: color,
+            x: canvas.width / 2,
+            y: canvas.height / 2,
+            size: 50,
+            width: 50,
+            height: 50,
+            rotation: 0,
+        };
 
-            shapes.push(shape);
-            updateShapeControls();
-            drawCanvas();
-        }
+        shapes.push(shape);
+        updateShapeControls();
+        drawCanvas();
+    }
 
-        // Draw all shapes on the canvas
-        function drawShapes() {
-            shapes.forEach(shape => {
-                ctx.fillStyle = shape.color;
-                ctx.save();
-                ctx.translate(shape.x, shape.y);
-                ctx.rotate(shape.rotation);
-                switch (shape.type) {
-                    case 'circle':
-                        ctx.beginPath();
-                        ctx.arc(0, 0, shape.size, 0, Math.PI * 2);
-                        ctx.fill();
-                        break;
-                    case 'rectangle':
-                        ctx.fillRect(-shape.width / 2, -shape.height / 2, shape.width, shape.height);
-                        break;
-                    case 'triangle':
-                        ctx.beginPath();
-                        ctx.moveTo(0, -shape.size);
-                        ctx.lineTo(-shape.size, shape.size);
-                        ctx.lineTo(shape.size, shape.size);
-                        ctx.closePath();
-                        ctx.fill();
-                        break;
-                    case 'ellipse':
-                        ctx.beginPath();
-                        ctx.ellipse(0, 0, shape.width / 2, shape.height / 2, 0, 0, Math.PI * 2);
-                        ctx.fill();
-                        break;
-                    case 'star':
-                        drawStar(0, 0, 5, shape.size, shape.size / 2);
-                        break;
-                    case 'diamond':
-                        ctx.beginPath();
-                        ctx.moveTo(0, -shape.height / 2);
-                        ctx.lineTo(-shape.width / 2, 0);
-                        ctx.lineTo(0, shape.height / 2);
-                        ctx.lineTo(shape.width / 2, 0);
-                        ctx.closePath();
-                        ctx.fill();
-                        break;
-                }
-                ctx.restore();
-            });
-        }
+    // Function to update shape controls UI
+    function updateShapeControls() {
+        const shapeControlsContainer = document.getElementById('shapeControls');
+        shapeControlsContainer.innerHTML = '';
 
-        // Function to draw a star
-        function drawStar(cx, cy, spikes, outerRadius, innerRadius) {
-            let rot = Math.PI / 2 * 3;
-            let x = cx;
-            let y = cy;
-            const step = Math.PI / spikes;
+        shapes.forEach((shape, index) => {
+            const shapeControl = document.createElement('div');
+            shapeControl.classList.add('shapeItem');
+            shapeControl.innerHTML = `
+                <div class="shapeHandle">☰</div>
+                <label>Type: ${shape.type}</label>
+                <label>Color: <input type="color" value="${shape.color}" onchange="updateShapeColor(${index}, event)"></label>
+                <label>X: <input type="number" value="${shape.x}" onchange="updateShapePosition(${index}, 'x', event)"></label>
+                <label>Y: <input type="number" value="${shape.y}" onchange="updateShapePosition(${index}, 'y', event)"></label>
+                <label>Size: <input type="number" value="${shape.size}" onchange="updateShapeSize(${index}, 'size', event)"></label>
+                <label>Width: <input type="number" value="${shape.width}" onchange="updateShapeSize(${index}, 'width', event)"></label>
+                <label>Height: <input type="number" value="${shape.height}" onchange="updateShapeSize(${index}, 'height', event)"></label>
+                <label>Rotation: <input type="number" value="${shape.rotation}" onchange="updateShapeRotation(${index}, event)"></label>
+                <button onclick="deleteShape(${index})">Delete</button>
+            `;
+            shapeControlsContainer.appendChild(shapeControl);
+        });
+    }
 
-            ctx.beginPath();
-            ctx.moveTo(cx, cy - outerRadius);
+    // Update shape color
+    function updateShapeColor(index, event) {
+        shapes[index].color = event.target.value;
+        drawCanvas();
+    }
 
-            for (let i = 0; i < spikes; i++) {
-                x = cx + Math.cos(rot) * outerRadius;
-                y = cy + Math.sin(rot) * outerRadius;
-                ctx.lineTo(x, y);
-                rot += step;
+    // Update shape position
+    function updateShapePosition(index, axis, event) {
+        shapes[index][axis] = parseFloat(event.target.value);
+        drawCanvas();
+    }
 
-                x = cx + Math.cos(rot) * innerRadius;
-                y = cy + Math.sin(rot) * innerRadius;
-                ctx.lineTo(x, y);
-                rot += step;
-            }
-            ctx.lineTo(cx, cy - outerRadius);
-            ctx.closePath();
-            ctx.fill();
-        }
+    // Update shape size
+    function updateShapeSize(index, axis, event) {
+        shapes[index][axis] = parseFloat(event.target.value);
+        drawCanvas();
+    }
 
-        // Function to update the number of lines
-        function updateLines() {
-            lineCount = document.getElementById('lineCount').value;
-            document.getElementById('lineCountDisplay').textContent = lineCount;
-            updateLineColorPickers();
-            drawCanvas();
-        }
+    // Update shape rotation
+    function updateShapeRotation(index, event) {
+        shapes[index].rotation = parseFloat(event.target.value);
+        drawCanvas();
+    }
 
-        // Function to update the color pickers based on line count
-        function updateLineColorPickers() {
-            colorPickers.innerHTML = '';
-            const lineColors = Math.min(lineCount, 5);
-            for (let i = 0; i < lineColors; i++) {
-                const colorPicker = document.createElement('input');
-                colorPicker.type = 'color';
-                colorPicker.classList.add('colorPicker');
-                colorPicker.value = '#ffffff';
-                colorPicker.onchange = drawCanvas;
-                colorPickers.appendChild(colorPicker);
-            }
-        }
+    // Delete shape
+    function deleteShape(index) {
+        shapes.splice(index, 1);
+        updateShapeControls();
+        drawCanvas();
+    }
 
-        // Function to update shape controls UI
-        function updateShapeControls() {
-            const shapeControlsContainer = document.getElementById('shapeControls');
-            shapeControlsContainer.innerHTML = '';
+    // Draw everything on the canvas
+    function drawCanvas() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        drawLines();
+        drawShapes();
+    }
 
-            shapes.forEach((shape, index) => {
-                const shapeControl = document.createElement('div');
-                shapeControl.classList.add('shapeItem');
-                shapeControl.innerHTML = `
-                    <div class="shapeHandle">☰</div>
-                    <label>Type: ${shape.type}</label>
-                    <label>Color: <input type="color" value="${shape.color}" onchange="updateShapeColor(${index}, event)"></label>
-                    <label>X: <input type="number" value="${shape.x}" onchange="updateShapePosition(${index}, 'x', event)"></label>
-                    <label>Y: <input type="number" value="${shape.y}" onchange="updateShapePosition(${index}, 'y', event)"></label>
-                    <label>Size: <input type="number" value="${shape.size}" onchange="updateShapeSize(${index}, 'size', event)"></label>
-                    <label>Width: <input type="number" value="${shape.width}" onchange="updateShapeSize(${index}, 'width', event)"></label>
-                    <label>Height: <input type="number" value="${shape.height}" onchange="updateShapeSize(${index}, 'height', event)"></label>
-                    <label>Rotation: <input type="number" value="${shape.rotation}" onchange="updateShapeRotation(${index}, event)"></label>
-                    <button onclick="deleteShape(${index})">Delete</button>
-                `;
-                shapeControlsContainer.appendChild(shapeControl);
-            });
-        }
-
-        // Update shape color
-        function updateShapeColor(index, event) {
-            shapes[index].color = event.target.value;
-            drawCanvas();
-        }
-
-        // Update shape position
-        function updateShapePosition(index, axis, event) {
-            shapes[index][axis] = parseFloat(event.target.value);
-            drawCanvas();
-        }
-
-        // Update shape size
-        function updateShapeSize(index, axis, event) {
-            shapes[index][axis] = parseFloat(event.target.value);
-            drawCanvas();
-        }
-
-        // Update shape rotation
-        function updateShapeRotation(index, event) {
-            shapes[index].rotation = parseFloat(event.target.value);
-            drawCanvas();
-        }
-
-        // Delete shape
-        function deleteShape(index) {
-            shapes.splice(index, 1);
-            updateShapeControls();
-            drawCanvas();
-        }
-
-        // Draw everything on the canvas
-        function drawCanvas() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            drawLines();
-            drawShapes();
-        }
-
-        // Clear the canvas
-        function clearCanvas() {
-            lineCount = 3;
-            shapes = [];
-            document.getElementById('lineCount').value = 3;
-            document.getElementById('lineCountDisplay').textContent = '3';
-            updateLineColorPickers();
-            drawCanvas();
-        }
-
-        // Download the flag as an image
-        function downloadFlag() {
-            const link = document.createElement('a');
-            link.download = 'flag.png';
-            link.href = canvas.toDataURL();
-            link.click();
-        }
-
-        // Initialize flag creation
+    // Clear the canvas
+    function clearCanvas() {
+        lineCount = 3;
+        shapes = [];
+        document.getElementById('lineCount').value = 3;
+        document.getElementById('lineCountDisplay').textContent = '3';
         updateLineColorPickers();
         drawCanvas();
-    </script>
+    }
+
+    // Download the flag as an image
+    function downloadFlag() {
+        const link = document.createElement('a');
+        link.download = 'flag.png';
+        link.href = canvas.toDataURL();
+        link.click();
+    }
+
+    // Initialize flag creation
+    updateLineColorPickers();
+    drawCanvas();
+</script>
 
 </body>
 </html>
