@@ -7,40 +7,54 @@
     <style>
         body {
             font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
             display: flex;
+            justify-content: center;
+            align-items: flex-start;
             flex-direction: column;
-            align-items: center;
+            margin: 0;
+            padding: 20px;
         }
+
+        h1 {
+            text-align: center;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: row;
+            gap: 30px;
+        }
+
         #flagCanvas {
             border: 1px solid black;
-            margin-top: 20px;
+            width: 600px;
+            height: 400px;
         }
+
         .controls {
-            margin-top: 20px;
             display: flex;
             flex-direction: column;
-            align-items: center;
+            gap: 20px;
         }
+
         .lineColorPicker {
             display: flex;
+            gap: 10px;
             margin-bottom: 10px;
         }
-        .lineColorPicker input {
-            margin-left: 5px;
-        }
-        .shapeControls {
-            margin-top: 20px;
-        }
+
         footer {
             background-color: #444;
             color: white;
-            padding: 10px 0;
+            padding: 10px;
             width: 100%;
             text-align: center;
             font-size: 0.9em;
-            margin-top: 20px;
+            margin-top: 30px;
+        }
+
+        .shapeControls select, .shapeControls input {
+            margin-top: 5px;
         }
     </style>
 </head>
@@ -48,47 +62,52 @@
 
 <h1>Flag Design Tool</h1>
 
-<canvas id="flagCanvas" width="800" height="500"></canvas>
-
-<div class="controls">
-    <!-- Line Count and Orientation Controls -->
+<div class="container">
+    <!-- Flag Canvas -->
     <div>
-        <label for="lineCount">Number of Lines (1-20): </label>
-        <input type="number" id="lineCount" min="1" max="20" value="3" onchange="updateLineCount()">
-        <span id="lineCountDisplay">3</span>
-    </div>
-    <div>
-        <label for="orientationToggle">Orientation (Horizontal/Vertical): </label>
-        <button id="orientationToggle" onclick="toggleOrientation()">Horizontal</button>
+        <canvas id="flagCanvas" width="600" height="400"></canvas>
     </div>
 
-    <!-- Line Color Picker for 1-5 lines -->
-    <div class="lineColorPicker">
-        <label>Line 1 Color: <input type="color" id="line1Color" onchange="updateLineColor(0, this.value)"></label>
-        <label>Line 2 Color: <input type="color" id="line2Color" onchange="updateLineColor(1, this.value)"></label>
-        <label>Line 3 Color: <input type="color" id="line3Color" onchange="updateLineColor(2, this.value)"></label>
-        <label>Line 4 Color: <input type="color" id="line4Color" onchange="updateLineColor(3, this.value)"></label>
-        <label>Line 5 Color: <input type="color" id="line5Color" onchange="updateLineColor(4, this.value)"></label>
-    </div>
+    <!-- Controls Panel -->
+    <div class="controls">
+        <div>
+            <label for="lineCount">Number of Lines (1-20): </label>
+            <input type="number" id="lineCount" min="1" max="20" value="3" onchange="updateLineCount()">
+            <span id="lineCountDisplay">3</span>
+        </div>
+        <div>
+            <label for="orientationToggle">Orientation (Horizontal/Vertical): </label>
+            <button id="orientationToggle" onclick="toggleOrientation()">Horizontal</button>
+        </div>
 
-    <!-- Shape Controls -->
-    <div class="shapeControls">
-        <label for="shape">Add Shape: </label>
-        <select id="shape">
-            <option value="circle">Circle</option>
-            <option value="rectangle">Rectangle</option>
-            <option value="triangle">Triangle</option>
-            <option value="ellipse">Ellipse</option>
-            <option value="star">Star</option>
-            <option value="diamond">Diamond</option>
-            <option value="pentagon">Pentagon</option>
-            <option value="hexagon">Hexagon</option>
-            <option value="cross">Cross</option>
-            <option value="heart">Heart</option>
-            <option value="plus">Plus</option>
-        </select>
-        <input type="color" id="shapeColor" value="#000000">
-        <button onclick="addShape()">Add Shape</button>
+        <!-- Line Color Picker for 1-5 lines -->
+        <div class="lineColorPicker">
+            <label>Line 1 Color: <input type="color" id="line1Color" onchange="updateLineColor(0, this.value)"></label>
+            <label>Line 2 Color: <input type="color" id="line2Color" onchange="updateLineColor(1, this.value)"></label>
+            <label>Line 3 Color: <input type="color" id="line3Color" onchange="updateLineColor(2, this.value)"></label>
+            <label>Line 4 Color: <input type="color" id="line4Color" onchange="updateLineColor(3, this.value)"></label>
+            <label>Line 5 Color: <input type="color" id="line5Color" onchange="updateLineColor(4, this.value)"></label>
+        </div>
+
+        <!-- Shape Controls -->
+        <div class="shapeControls">
+            <label for="shape">Add Shape: </label>
+            <select id="shape">
+                <option value="circle">Circle</option>
+                <option value="rectangle">Rectangle</option>
+                <option value="triangle">Triangle</option>
+                <option value="ellipse">Ellipse</option>
+                <option value="star">Star</option>
+                <option value="diamond">Diamond</option>
+                <option value="pentagon">Pentagon</option>
+                <option value="hexagon">Hexagon</option>
+                <option value="cross">Cross</option>
+                <option value="heart">Heart</option>
+                <option value="plus">Plus</option>
+            </select>
+            <input type="color" id="shapeColor" value="#000000">
+            <button onclick="addShape()">Add Shape</button>
+        </div>
     </div>
 </div>
 
@@ -219,7 +238,4 @@
 </script>
 
 </body>
-<footer style="background-color: #444; color: white; padding: 10px 0; width: 100%; text-align: center; font-size: 0.9em; margin-top: 20px;">
-    <p>BETA VERSION 0.02</p>
-</footer>
 </html>
